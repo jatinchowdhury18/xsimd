@@ -193,6 +193,7 @@ protected:
         B b_left0 = B::load_unaligned(this->v_left0.data());
         B b_left_full = B::load_unaligned(this->v_left_full.data());
         B b_left_half = B::load_unaligned(this->v_left_half.data());
+        B b_left_one = B::load_unaligned(this->v_left_one.data());
         B b_left_above_half = B::load_unaligned(this->v_left_above_half.data());
         B b_left_below_half = B::load_unaligned(this->v_left_below_half.data());
 
@@ -204,6 +205,9 @@ protected:
 
         B b_res_left_half = xsimd::slide_left<half_slide>(b_in);
         EXPECT_BATCH_EQ(b_res_left_half, b_left_half) << print_function_name("slide_left half_slide");
+
+        B b_res_left_one = xsimd::slide_left<1>(b_in);
+        EXPECT_BATCH_EQ(b_res_left_one, b_left_one) << print_function_name("slide_left one_slide");
 
         if (activate_above_below_checks)
         {
@@ -221,6 +225,7 @@ protected:
         B b_right0 = B::load_unaligned(this->v_right0.data());
         B b_right_full = B::load_unaligned(this->v_right_full.data());
         B b_right_half = B::load_unaligned(this->v_right_half.data());
+        B b_right_one = B::load_unaligned(this->v_right_one.data());
         B b_right_above_half = B::load_unaligned(this->v_right_above_half.data());
         B b_right_below_half = B::load_unaligned(this->v_right_below_half.data());
 
@@ -232,6 +237,9 @@ protected:
 
         B b_res_right_half = xsimd::slide_right<half_slide>(b_in);
         EXPECT_BATCH_EQ(b_res_right_half, b_right_half) << print_function_name("slide_right half_slide");
+
+        B b_res_right_one = xsimd::slide_right<1>(b_in);
+        EXPECT_BATCH_EQ(b_res_right_one, b_right_one) << print_function_name("slide_right one_slide");
 
         if (activate_above_below_checks)
         {
