@@ -152,7 +152,7 @@ namespace
             std::iota(v_right_half.begin(), v_right_half.begin() + half_slide / sizeof(T), v_in[half_slide / sizeof(T)]);
 
             std::fill(v_right_one.begin(), v_right_one.end(), 0);
-            std::iota(v_right_one.begin(), v_right_one.begin() + 1, v_in[1]);
+            std::iota(v_right_one.begin(), v_right_one.begin() + full_slide / sizeof(T) - 1, v_in[1]);
 
             if (activate_above_below_checks)
             {
@@ -206,7 +206,7 @@ protected:
         B b_res_left_half = xsimd::slide_left<half_slide>(b_in);
         EXPECT_BATCH_EQ(b_res_left_half, b_left_half) << print_function_name("slide_left half_slide");
 
-        B b_res_left_one = xsimd::slide_left<1>(b_in);
+        B b_res_left_one = xsimd::slide_left<sizeof(value_type)>(b_in);
         EXPECT_BATCH_EQ(b_res_left_one, b_left_one) << print_function_name("slide_left one_slide");
 
         if (activate_above_below_checks)
@@ -238,7 +238,7 @@ protected:
         B b_res_right_half = xsimd::slide_right<half_slide>(b_in);
         EXPECT_BATCH_EQ(b_res_right_half, b_right_half) << print_function_name("slide_right half_slide");
 
-        B b_res_right_one = xsimd::slide_right<1>(b_in);
+        B b_res_right_one = xsimd::slide_right<sizeof(value_type)>(b_in);
         EXPECT_BATCH_EQ(b_res_right_one, b_right_one) << print_function_name("slide_right one_slide");
 
         if (activate_above_below_checks)
