@@ -364,7 +364,7 @@ namespace xsimd
             {
                 alignas(32) uint64_t buffer[8];
                 _mm512_store_epi64(&buffer[0], x);
-                for (int i = 7; i > 0; ++i)
+                for (int i = 7; i > 0; --i)
                     buffer[i] = (buffer[i] << 8) | (buffer[i - 1] >> 56);
                 buffer[0] = buffer[0] << 8;
                 xx = _mm512_load_epi64(&buffer[0]);
@@ -381,10 +381,10 @@ namespace xsimd
         // slide_right
         namespace detail
         {
-            template <size_t N, size_t... Is>
-            constexpr std::array<uint8_t, sizeof...(Is)> make_mask_low(::xsimd::detail::index_sequence<Is...>)
+            template <size_t... Is>
+            constexpr std::array<uint64_t, sizeof...(Is)> make_slide_perm_low(::xsimd::detail::index_sequence<Is...>)
             {
-                return { (Is == 0 ? 0 : Is - 1)... };
+                return { ((Is == (sizeof...(Is)) - 1) ? 8 : Is + 1)... };
             }
 
             template <size_t N, size_t... Is>
@@ -410,23 +410,24 @@ namespace xsimd
             {
                 return batch<T, A>(T(0));
             }
-            batch<T, A> xx;
+
+            __m512i xx = x;
+            if (n != 1)
+            {
+                alignas(32) auto slide_pattern = detail::make_slide_right_pattern<N / 2>(::xsimd::detail::make_index_sequence<512 / 16>());
+                alignas(32) auto slide_mask = detail::make_slide_right_mask<N / 2>(::xsimd::detail::make_index_sequence<512 / 16>());
+                xx = _mm512_and_si512(_mm512_permutexvar_epi16(_mm512_load_epi32(slide_pattern.data()), xx), _mm512_load_epi32(slide_mask.data()));
+            }
+
             if (N & 1)
             {
-                alignas(32) uint64_t buffer[8];
-                _mm512_store_epi64(&buffer[0], x);
-                for (int i = 0; i < 7; ++i)
-                    buffer[i] = (buffer[i] >> 8) | (buffer[i + 1] << 56);
-                buffer[7] = buffer[7] >> 8;
-                xx = _mm512_load_epi64(&buffer[0]);
+                alignas(32) auto slide_perm = detail::make_slide_perm_low(::xsimd::detail::make_index_sequence<512 / 64>());
+                __m512i xr = _mm512_srli_epi64(xx, 8);
+                __m512i xl = _mm512_slli_epi64(xx, 56);
+                xl = _mm512_permutex2var_epi64(xl, _mm512_load_epi64(slide_perm.data()), _mm512_setzero_si512());
+                xx = _mm512_or_si512(xr, xl);
             }
-            else
-            {
-                xx = x;
-            }
-            alignas(32) auto slide_pattern = detail::make_slide_right_pattern<N / 2>(::xsimd::detail::make_index_sequence<512 / 16>());
-            alignas(32) auto slide_mask = detail::make_slide_right_mask<N / 2>(::xsimd::detail::make_index_sequence<512 / 16>());
-            return _mm512_and_si512(_mm512_permutexvar_epi16(_mm512_load_epi32(slide_pattern.data()), xx), _mm512_load_epi32(slide_mask.data()));
+            return xx;
         }
 
         // ssub
